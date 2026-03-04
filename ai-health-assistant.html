@@ -1,0 +1,1352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>AI Health Assistant – UI Prototype</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --teal:    #0D9488;
+    --teal-lt: #CCFBF1;
+    --teal-dk: #0A7567;
+    --mint:    #F0FDF9;
+    --amber:   #F59E0B;
+    --red:     #EF4444;
+    --red-lt:  #FEE2E2;
+    --sky:     #38BDF8;
+    --ink:     #0F2937;
+    --slate:   #64748B;
+    --mist:    #F1F5F9;
+    --white:   #FFFFFF;
+    --radius:  18px;
+    --shadow:  0 4px 24px rgba(13,148,136,.12);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: #E8F4F2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 32px 16px 64px;
+    gap: 0;
+  }
+
+  /* ── FLOW DIAGRAM ── */
+  .flow-wrap {
+    width: 100%;
+    max-width: 960px;
+    background: var(--white);
+    border-radius: 24px;
+    padding: 32px;
+    margin-bottom: 40px;
+    box-shadow: var(--shadow);
+  }
+  .flow-wrap h2 {
+    font-size: 20px; font-weight: 800; color: var(--ink);
+    margin-bottom: 6px;
+  }
+  .flow-wrap p { font-size: 13px; color: var(--slate); margin-bottom: 24px; }
+
+  .flow-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    justify-content: center;
+  }
+  .flow-node {
+    background: var(--teal);
+    color: #fff;
+    border-radius: 10px;
+    padding: 8px 14px;
+    font-size: 12px;
+    font-weight: 700;
+    text-align: center;
+    cursor: pointer;
+    transition: transform .15s, box-shadow .15s;
+    white-space: nowrap;
+  }
+  .flow-node:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(13,148,136,.3); }
+  .flow-node.warn { background: var(--red); }
+  .flow-node.amber { background: var(--amber); color: var(--ink); }
+  .flow-arrow { font-size: 18px; color: var(--slate); }
+
+  /* ── DEVICE GRID ── */
+  .device-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 28px;
+    width: 100%;
+    max-width: 960px;
+  }
+
+  /* ── PHONE SHELL ── */
+  .phone {
+    width: 300px;
+    margin: 0 auto;
+    background: #1A2B35;
+    border-radius: 44px;
+    padding: 12px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.28);
+  }
+  .phone-inner {
+    background: var(--white);
+    border-radius: 36px;
+    overflow: hidden;
+    position: relative;
+    height: 580px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Status bar */
+  .status-bar {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 20px 4px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--ink);
+    flex-shrink: 0;
+  }
+  .status-icons { display: flex; gap: 6px; align-items: center; }
+  .status-icons span { font-size: 10px; }
+
+  /* Screen label */
+  .screen-label {
+    text-align: center;
+    padding: 2px 0 6px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .08em;
+    color: var(--teal);
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+
+  /* Screen content area */
+  .screen { flex: 1; overflow-y: auto; overflow-x: hidden; }
+  .screen::-webkit-scrollbar { display: none; }
+
+  /* Bottom nav */
+  .bottom-nav {
+    display: flex;
+    justify-content: space-around;
+    padding: 10px 4px 14px;
+    border-top: 1px solid #E2EBF0;
+    background: var(--white);
+    flex-shrink: 0;
+  }
+  .nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    font-size: 9px;
+    font-weight: 700;
+    color: var(--slate);
+    cursor: pointer;
+  }
+  .nav-item.active { color: var(--teal); }
+  .nav-icon { font-size: 18px; }
+
+  /* ── REUSABLE COMPONENTS ── */
+  .btn {
+    display: block;
+    width: 100%;
+    padding: 14px;
+    border-radius: 14px;
+    border: none;
+    font-family: 'Nunito', sans-serif;
+    font-size: 14px;
+    font-weight: 800;
+    cursor: pointer;
+    text-align: center;
+    transition: filter .15s, transform .12s;
+  }
+  .btn:hover { filter: brightness(1.08); transform: scale(1.01); }
+  .btn-primary { background: var(--teal); color: #fff; }
+  .btn-secondary { background: var(--teal-lt); color: var(--teal-dk); }
+  .btn-danger { background: var(--red); color: #fff; }
+  .btn-ghost { background: transparent; border: 2px solid var(--teal); color: var(--teal); }
+
+  .chip {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .chip-outline { border: 2px solid var(--teal); color: var(--teal); background: transparent; }
+  .chip-filled  { background: var(--teal); color: #fff; border: 2px solid var(--teal); }
+  .chip-mist    { background: var(--mist); color: var(--ink); border: 2px solid transparent; }
+
+  .card {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 16px;
+    box-shadow: 0 2px 12px rgba(0,0,0,.06);
+  }
+
+  .input-field {
+    width: 100%;
+    padding: 12px 14px;
+    border: 2px solid #E2EBF0;
+    border-radius: 12px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 13px;
+    color: var(--ink);
+    outline: none;
+    transition: border-color .15s;
+  }
+  .input-field:focus { border-color: var(--teal); }
+
+  .section-title {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--slate);
+    margin-bottom: 10px;
+  }
+
+  .avatar {
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    background: var(--teal-lt);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+
+  /* severity badge */
+  .badge { border-radius: 999px; padding: 3px 10px; font-size: 11px; font-weight: 800; }
+  .badge-low  { background: #D1FAE5; color: #065F46; }
+  .badge-mid  { background: #FEF3C7; color: #92400E; }
+  .badge-high { background: var(--red-lt); color: #991B1B; }
+
+  /* progress bar */
+  .progress-track { height: 8px; background: #E2EBF0; border-radius: 99px; overflow: hidden; }
+  .progress-fill  { height: 100%; background: var(--teal); border-radius: 99px; }
+
+  /* vital card */
+  .vital-card {
+    background: var(--mint);
+    border-radius: 14px;
+    padding: 12px 14px;
+    border-left: 4px solid var(--teal);
+  }
+  .vital-val { font-size: 22px; font-weight: 900; color: var(--ink); }
+  .vital-lbl { font-size: 10px; font-weight: 700; color: var(--slate); text-transform: uppercase; }
+
+  /* clinic card */
+  .clinic-card {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    padding: 12px;
+    background: var(--white);
+    border-radius: 14px;
+    border: 1.5px solid #E2EBF0;
+    cursor: pointer;
+    transition: border-color .15s;
+  }
+  .clinic-card:hover { border-color: var(--teal); }
+
+  /* emergency pulse */
+  @keyframes pulse-red {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,.5); }
+    50%       { box-shadow: 0 0 0 16px rgba(239,68,68,0); }
+  }
+  .pulse-btn { animation: pulse-red 1.6s infinite; border-radius: 16px; }
+
+  /* onboarding dots */
+  .dots { display: flex; gap: 6px; justify-content: center; }
+  .dot  { width: 8px; height: 8px; border-radius: 50%; background: #CBD5E1; }
+  .dot.active { background: var(--teal); width: 22px; border-radius: 99px; }
+
+  /* AI typing dots */
+  @keyframes blink {
+    0%,80%,100% { opacity: .2; transform: scale(.8); }
+    40% { opacity: 1; transform: scale(1); }
+  }
+  .typing-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--teal); animation: blink 1.2s infinite; }
+  .typing-dot:nth-child(2) { animation-delay: .2s; }
+  .typing-dot:nth-child(3) { animation-delay: .4s; }
+
+  /* map placeholder */
+  .map-box {
+    width: 100%;
+    height: 160px;
+    background: linear-gradient(135deg, #CCE9E6 0%, #A7D8D3 100%);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    position: relative;
+    overflow: hidden;
+  }
+  .map-pin {
+    position: absolute;
+    font-size: 22px;
+  }
+
+  /* chart bars */
+  .mini-bar { width: 100%; display: flex; align-items: flex-end; gap: 6px; height: 60px; }
+  .bar {
+    flex: 1;
+    border-radius: 6px 6px 0 0;
+    background: var(--teal-lt);
+    transition: height .3s;
+  }
+  .bar.today { background: var(--teal); }
+
+  /* ── SCREEN-SPECIFIC ── */
+
+  /* S1 – Welcome */
+  .welcome-bg {
+    background: linear-gradient(160deg, #0D9488 0%, #0A7567 60%, #065F46 100%);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  .welcome-bg::before {
+    content: '';
+    position: absolute;
+    width: 280px; height: 280px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.06);
+    top: -60px; right: -80px;
+  }
+  .welcome-bg::after {
+    content: '';
+    position: absolute;
+    width: 180px; height: 180px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.05);
+    bottom: 40px; left: -50px;
+  }
+  .welcome-logo { font-size: 54px; margin-bottom: 12px; }
+  .welcome-title {
+    font-family: 'Instrument Serif', serif;
+    font-size: 26px;
+    color: #fff;
+    text-align: center;
+    line-height: 1.2;
+  }
+  .welcome-sub { font-size: 13px; color: rgba(255,255,255,.75); text-align: center; margin: 10px 0 30px; }
+  .welcome-btns { width: 100%; display: flex; flex-direction: column; gap: 10px; }
+  .btn-white { background: #fff; color: var(--teal-dk); font-size: 14px; font-weight: 800; border-radius: 14px; padding: 14px; border: none; cursor: pointer; }
+  .btn-outline-white { background: transparent; color: #fff; border: 2px solid rgba(255,255,255,.6); font-size: 14px; font-weight: 800; border-radius: 14px; padding: 12px; cursor: pointer; }
+
+  /* S3 – Dashboard */
+  .dash-header {
+    background: linear-gradient(135deg, #0D9488, #0A7567);
+    padding: 20px 18px 28px;
+    color: #fff;
+  }
+  .dash-greeting { font-size: 11px; opacity: .8; font-weight: 700; }
+  .dash-name { font-size: 20px; font-weight: 900; }
+  .dash-status-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(255,255,255,.18);
+    border-radius: 999px; padding: 5px 12px;
+    font-size: 12px; font-weight: 700; margin-top: 10px;
+  }
+
+  /* quick actions */
+  .quick-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .quick-card {
+    border-radius: 14px;
+    padding: 14px 12px;
+    display: flex; flex-direction: column; gap: 6px;
+    cursor: pointer;
+    transition: transform .15s;
+  }
+  .quick-card:hover { transform: scale(1.02); }
+  .qc-icon { font-size: 24px; }
+  .qc-label { font-size: 12px; font-weight: 800; }
+  .qc-sub { font-size: 10px; opacity: .7; }
+
+  /* S5 – AI Analysis */
+  .ai-bubble {
+    background: var(--mint);
+    border: 1.5px solid #99E6DA;
+    border-radius: 4px 16px 16px 16px;
+    padding: 12px 14px;
+    font-size: 13px;
+    color: var(--ink);
+    line-height: 1.5;
+  }
+  .user-bubble {
+    background: var(--teal);
+    color: #fff;
+    border-radius: 16px 4px 16px 16px;
+    padding: 12px 14px;
+    font-size: 13px;
+    align-self: flex-end;
+    max-width: 80%;
+  }
+
+  /* S9 – Emergency */
+  .emergency-bg {
+    background: #FEF2F2;
+    flex: 1;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 20px;
+    gap: 14px;
+  }
+  .sos-ring {
+    width: 90px; height: 90px;
+    border-radius: 50%;
+    background: var(--red);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 36px;
+    color: #fff;
+    animation: pulse-red 1.4s infinite;
+  }
+
+  /* ── SCREEN WRAPPER ── */
+  .p-screen { padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+
+  .screen-card-label {
+    text-align: center;
+    margin-top: -4px;
+    margin-bottom: 12px;
+  }
+
+  /* divider */
+  hr { border: none; border-top: 1px solid #E2EBF0; }
+
+  /* ── PAGE TITLE ── */
+  .page-header {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 14px 4px;
+  }
+  .back-btn {
+    font-size: 18px; cursor: pointer; color: var(--teal);
+    background: var(--teal-lt); border: none;
+    border-radius: 10px; width: 32px; height: 32px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .page-title { font-size: 16px; font-weight: 900; color: var(--ink); }
+
+  /* ── OUTER LAYOUT ── */
+  .section-header {
+    width: 100%;
+    max-width: 960px;
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin: 8px 0 4px;
+  }
+  .section-header h3 {
+    font-size: 14px;
+    font-weight: 900;
+    color: var(--ink);
+  }
+  .section-header span {
+    font-size: 12px;
+    color: var(--slate);
+  }
+
+  /* flow legend */
+  .legend {
+    display: flex; gap: 16px; flex-wrap: wrap;
+    font-size: 11px; color: var(--slate); font-weight: 700;
+    margin-top: 12px;
+  }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 4px; }
+
+  /* annotation */
+  .annotation {
+    width: 100%;
+    max-width: 300px;
+    margin: 0 auto;
+    background: #FFF9E6;
+    border-left: 3px solid var(--amber);
+    border-radius: 0 8px 8px 0;
+    padding: 8px 12px;
+    font-size: 11px;
+    color: #92400E;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 640px) {
+    .device-grid { grid-template-columns: 1fr; }
+    body { padding: 16px 8px 48px; }
+  }
+
+  .scroll-hint {
+    text-align: center;
+    font-size: 11px;
+    color: var(--slate);
+    margin-top: 10px;
+    font-weight: 700;
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════
+     USER FLOW DIAGRAM
+══════════════════════════════════════════════ -->
+<div class="flow-wrap">
+  <h2>🗺️ AI Health Assistant — Complete User Flow</h2>
+  <p>All 10 screens with navigation paths. Click any node to jump to that screen.</p>
+  <div class="flow-grid">
+    <div class="flow-node" onclick="scrollTo('s1')">① Welcome</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-node" onclick="scrollTo('s2')">② Onboarding</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-node" onclick="scrollTo('s3')">③ Dashboard</div>
+    <div class="flow-arrow">⬇</div>
+    <div style="width:100%; display:flex; gap:8px; align-items:center; justify-content:center; flex-wrap:wrap;">
+      <div class="flow-node" onclick="scrollTo('s4')">④ Symptom Input</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node" onclick="scrollTo('s5')">⑤ AI Analysis</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node" onclick="scrollTo('s6')">⑥ Health Advice</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node warn" onclick="scrollTo('s9')">⑨ Emergency ⚠️</div>
+    </div>
+    <div style="width:100%; display:flex; gap:8px; align-items:center; justify-content:center; flex-wrap:wrap; margin-top:4px;">
+      <div class="flow-node amber" onclick="scrollTo('s7')">⑦ Health Tracker</div>
+      <div class="flow-arrow">↔</div>
+      <div class="flow-node amber" onclick="scrollTo('s8')">⑧ Clinic Finder</div>
+      <div class="flow-arrow">↔</div>
+      <div class="flow-node amber" onclick="scrollTo('s10')">⑩ Profile & History</div>
+    </div>
+  </div>
+  <div class="legend">
+    <span><span class="legend-dot" style="background:var(--teal)"></span>Primary Flow</span>
+    <span><span class="legend-dot" style="background:var(--red)"></span>Emergency Branch</span>
+    <span><span class="legend-dot" style="background:var(--amber)"></span>Secondary Screens (Bottom Nav)</span>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     SCREENS GRID
+══════════════════════════════════════════════ -->
+<div class="device-grid">
+
+  <!-- ═══ S1: WELCOME ═══ -->
+  <div id="s1">
+    <div class="section-header"><h3>Screen 1</h3><span>Welcome / Splash</span></div>
+    <div class="phone">
+      <div class="phone-inner">
+        <div class="status-bar" style="color:#fff; position:absolute; top:0; left:0; right:0; z-index:2; background:transparent;">
+          <span>9:41</span>
+          <div class="status-icons"><span>●●●</span><span>WiFi</span><span>🔋</span></div>
+        </div>
+        <div class="welcome-bg">
+          <div class="welcome-logo">🩺</div>
+          <div class="welcome-title">Your AI<br>Health Guide</div>
+          <div class="welcome-sub">Free, fast health advice —<br>even with limited internet</div>
+          <div class="welcome-btns">
+            <button class="btn-white">Get Started →</button>
+            <button class="btn-outline-white">I already have an account</button>
+          </div>
+          <div style="margin-top:16px; font-size:11px; color:rgba(255,255,255,.55); text-align:center;">
+            Available in English · Swahili · French<br>Works offline for basic features
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="annotation">🔗 Tap "Get Started" → Screen 2 (Onboarding)<br>Tap "Login" → Screen 3 (Dashboard)</div>
+  </div>
+
+  <!-- ═══ S2: ONBOARDING ═══ -->
+  <div id="s2">
+    <div class="section-header"><h3>Screen 2</h3><span>User Onboarding</span></div>
+    <div class="phone">
+      <div class="phone-inner">
+        <div class="status-bar">
+          <span>9:42</span>
+          <div class="status-icons"><span>●●●</span><span>🔋</span></div>
+        </div>
+        <div class="screen-label">Step 2 of 3 — Your Profile</div>
+        <div class="screen p-screen">
+          <div style="display:flex; justify-content:center;">
+            <div class="avatar" style="width:64px; height:64px; font-size:30px; background:var(--teal-lt); border: 3px dashed var(--teal);">+</div>
+          </div>
+          <div style="font-size:18px; font-weight:900; color:var(--ink); text-align:center;">Tell us about you</div>
+          <div style="font-size:12px; color:var(--slate); text-align:center; margin-top:-6px;">So we can give you the right advice</div>
+
+          <div>
+            <div class="section-title">Full Name</div>
+            <input class="input-field" placeholder="e.g. Amina Wanjiku" />
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <div>
+              <div class="section-title">Age</div>
+              <input class="input-field" placeholder="e.g. 34" type="number"/>
+            </div>
+            <div>
+              <div class="section-title">Sex</div>
+              <select class="input-field" style="appearance:none;">
+                <option>Female</option>
+                <option>Male</option>
+                <option>Other</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <div class="section-title">Known Conditions (optional)</div>
+            <div style="display:flex; flex-wrap:wrap; gap:7px;">
+              <span class="chip chip-filled">Diabetes</span>
+              <span class="chip chip-outline">Hypertension</span>
+              <span class="chip chip-outline">Asthma</span>
+              <span class="chip chip-outline">Malaria-prone</span>
+              <span class="chip chip-outline">None</span>
+            </div>
+          </div>
+          <div>
+            <div class="section-title">Primary Language</div>
+            <div style="display:flex; gap:8px;">
+              <span class="chip chip-filled">English</span>
+              <span class="chip chip-outline">Swahili</span>
+              <span class="chip chip-outline">French</span>
+            </div>
+          </div>
+          <button class="btn btn-primary" style="margin-top:4px;">Continue →</button>
+          <div class="dots">
+            <div class="dot"></div>
+            <div class="dot active"></div>
+            <div class="dot"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="annotation">🔗 "Continue" → Screen 3 (Dashboard) after 3 steps<br>Back swipe → Screen 1</div>
+  </div>
+
+  <!-- ═══ S3: DASHBOARD ═══ -->
+  <div id="s3">
+    <div class="section-header"><h3>Screen 3</h3><span>Home Dashboard</span></div>
+    <div class="phone">
+      <div class="phone-inner">
+        <div class="status-bar">
+          <span>9:45</span>
+          <div class="status-icons"><span>●●●</span><span>🔋</span></div>
+        </div>
+        <div class="screen" style="background:var(--mist);">
+          <div class="dash-header">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+              <div>
+                <div class="dash-greeting">Good morning 👋</div>
+                <div class="dash-name">Amina Wanjiku</div>
+              </div>
+              <div class="avatar">🧑🏿</div>
+            </div>
+            <div class="dash-status-pill">
+              <span>🟢</span> Health Status: Good
+            </div>
+          </div>
+
+          <div class="p-screen" style="padding-top:14px;">
+            <!-- Alert banner -->
+            <div style="background:#FEF3C7; border-radius:12px; padding:10px 14px; display:flex; align-items:center; gap:8px; border-left:4px solid var(--amber);">
+              <span style="font-size:18px;">💊</span>
+              <div>
+                <div style="font-size:12px; font-weight:800; color:#92400E;">Medication Reminder</div>
+                <div style="font-size:11px; color:#92400E;">Take Metformin — 8:00 AM</div>
+              </div>
+            </div>
+
+            <!-- Quick actions -->
+            <div class="section-title">Quick Actions</div>
+            <div class="quick-grid">
+              <div class="quick-card" style="background: linear-gradient(135deg,#0D9488,#0A7567); color:#fff;">
+                <div class="qc-icon">🔍</div>
+                <div class="qc-label">Check Symptoms</div>
+                <div class="qc-sub" style="color:rgba(255,255,255,.7);">AI-powered check</div>
+              </div>
+              <div class="quick-card" style="background:#EFF6FF;">
+                <div class="qc-icon">📍</div>
+                <div class="qc-label" style="color:var(--ink);">Find Clinic</div>
+                <div class="qc-sub" style="color:var(--slate);">3 nearby</div>
+              </div>
+              <div class="quick-card" style="background:#F0FDF4;">
+                <div class="qc-icon">📊</div>
+                <div class="qc-label" style="color:var(--ink);">Log Vitals</div>
+                <div class="qc-sub" style="color:var(--slate);">Track health</div>
+              </div>
+              <div class="quick-card" style="background:#FFF7ED;">
+                <div class="qc-icon">📋</div>
+                <div class="qc-label" style="color:var(--ink);">My History</div>
+                <div class="qc-sub" style="color:var(--slate);">Last check: today</div>
+              </div>
+            </div>
+
+            <!-- Recent activity -->
+            <div class="section-title">Recent Activity</div>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <div style="display:flex; align-items:center; gap:10px; padding:10px; background:#fff; border-radius:12px;">
+                <span style="font-size:20px;">🤒</span>
+                <div style="flex:1;">
+                  <div style="font-size:12px; font-weight:800; color:var(--ink);">Headache + Fever</div>
+                  <div style="font-size:10px; color:var(--slate);">Yesterday · Mild risk</div>
+                </div>
+                <span class="badge badge-low">Low</span>
+              </div>
+              <div style="display:flex; align-items:center; gap:10px; padding:10px; background:#fff; border-radius:12px;">
+                <span style="font-size:20px;">💉</span>
+                <div style="flex:1;">
+                  <div style="font-size:12px; font-weight:800; color:var(--ink);">Blood Sugar Log</div>
+                  <div style="font-size:10px; color:var(--slate);">Today · 7.2 mmol/L</div>
+                </div>
+                <span class="badge badge-mid">Watch</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="bottom-nav">
+          <div class="nav-item active"><div class="nav-icon">🏠</div>Home</div>
+          <div class="nav-item"><div class="nav-icon">🔍</div>Symptoms</div>
+          <div class="nav-item"><div class="nav-icon">📊</div>Track</div>
+          <div class="nav-item"><div class="nav-icon">📍</div>Clinics</div>
+          <div class="nav-item"><div class="nav-icon">👤</div>Profile</div>
+        </div>
+      </div>
+    </div>
+    <div class="annotation">🔗 "Check Symptoms" → S4 · "Find Clinic" → S8<br>"Log Vitals" → S7 · "My History" → S10</div>
+  </div>
+
+  <!-- ═══ S4: SYMPTOM INPUT ═══ -->
+  <div id="s4">
+    <div class="section-header"><h3>Screen 4</h3><span>Symptom Input</span></div>
+    <div class="phone">
+      <div class="phone-inner">
+        <div class="status-bar">
+          <span>9:47</span>
+          <div class="status-icons"><span>●●●</span><span>🔋</span></div>
+        </div>
+        <div class="page-header">
+          <button class="back-btn">←</button>
+          <div class="page-title">Check Symptoms</div>
+        </div>
+        <div class="screen p-screen" style="padding-top:6px;">
+          <div style="background:var(--teal-lt); border-radius:12px; padding:10px 14px; font-size:12px; color:var(--teal-dk); font-weight:600; display:flex; gap:8px; align-items:center;">
+            <span>🤖</span> Tell me what you're feeling. I'll help figure it out.
+          </div>
+
+          <div>
+            <div class="section-title">Where do you feel pain?</div>
+            <div style="background:var(--mist); border-radius:14px; padding:14px; text-align:center; font-size:36px; position:relative; cursor:pointer;">
+              🧑‍⚕️
+              <div style="font-size:11px; color:var(--slate); margin-top:6px; font-weight:700;">Tap body area to select</div>
+            </div>
+          </div>
+
+          <div>
+            <div class="section-title">Select your symptoms</div>
+            <div style="display:flex; flex-wrap:wrap; gap:7px;">
+              <span class="chip chip-filled">🤒 Fever</span>
+              <span class="chip chip-filled">🤕 Headache</span>
+              <span class="chip chip-outline">😮‍💨 Cough</span>
+              <span class="chip chip-outline">🤢 Nausea</span>
+              <span class="chip chip-outline">😫 Fatigue</span>
+              <span class="chip chip-outline">💧 Diarrhea</span>
+              <span class="chip chip-outline">😵 Dizziness</span>
+              <span class="chip chip-outline">+ More</span>
+            </div>
+          </div>
+
+          <div>
+            <div class="section-title">How severe is your pain? (1–5)</div>
+            <div style="display:flex; gap:8px; justify-content:center;">
+              <span style="font-size:22px; cursor:pointer;">😊</span>
+              <span style="font-size:22px; cursor:pointer;">🙂</span>
+              <span style="font-size:22px; cursor:pointer; filter:drop-shadow(0 0 4px var(--teal));">😐</span>
+              <span style="font-size:22px; cursor:pointer;">😟</span>
+              <span style="font-size:22px; cursor:pointer;">😖</span>
+            </div>
+          </div>
+
+          <div>
+            <div class="section-title">How long have you had these symptoms?</div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <span class="chip chip-outline">Today</span>
+              <span class="chip chip-filled">1–2 days</span>
+              <span class="chip chip-outline">3–5 days</span>
+              <span class="chip chip-outline">1 week+</span>
+            </div>
+          </div>
+
+          <div>
+            <div class="section-title">Describe in your own words (optional)</div>
+            <textarea class="input-field" rows="2" placeholder="e.g. My head hurts and I feel very cold..." style="resize:none;"></textarea>
+          </div>
+
+          <button class="btn btn-primary">🔍 Analyse My Symptoms</button>
+        </div>
+        <div class="bottom-nav">
+          <div class="nav-item"><div class="nav-icon">🏠</div>Home</div>
+          <div class="nav-item active"><div class="nav-icon">🔍</div>Symptoms</div>
+          <div class="nav-item"><div class="nav-icon">📊</div>Track</div>
+          <div class="nav-item"><div class="nav-icon">📍</div>Clinics</div>
+          <div class="nav-item"><div class="nav-icon">👤</div>Profile</div>
+        </div>
+      </div>
+    </div>
+    <div class="annotation">🔗 "Analyse" → S5 (AI Analysis)<br>Severity 4-5 → triggers S9 (Emergency) warning</div>
+  </div>
+
+  <!-- ═══ S5: AI ANALYSIS ═══ -->
+  <div id="s5">
+    <div class="section-header"><h3>Screen 5</h3><span>AI Symptom Analysis</span></div>
+    <div class="phone">
+      <div class="phone-inner">
+        <div class="status-bar">
+          <span>9:48</span>
+          <div class="status-icons"><span>●●●</span><span>🔋</span></div>
+        </div>
+        <div class="page-header">
+          <button class="back-btn">←</button>
+          <div class="page-title">AI Analysis</div>
+        </div>
+        <div class="screen p-screen" style="padding-top:6px; gap:10px;">
+
+          <!-- AI header -->
+          <div style="display:flex; align-items:center; gap:10px; background:linear-gradient(135deg,#0D9488,#0A7567); border-radius:14px; padding:12px 14px; color:#fff;">
+            <div style="font-size:28px;">🤖</div>
+            <div>
+              <div style="font-size:13px; font-weight:900;">HealthBot is analysing…</div>
+              <div style="font-size:11px; opacity:.8;">Comparing 12,000+ conditions</div>
+            </div>
+            <div style="margin-left:auto; display:flex; gap:4px; align-items:center;">
+              <div class="typing-dot" style="background:#fff;"></div>
+              <div class="typing-dot" style="background:#fff;"></div>
+              <div class="typing-dot" style="background:#fff;"></div>
+            </div>
+          </div>
+
+          <!-- Progress -->
+          <div>
+            <div style="display:flex; justify-content:space-between; font-size:11px; color:var(--slate); margin-bottom:5px; font-weight:700;">
+              <span>Analysis complete</span><span>85%</span>
+            </div>
+            <div class="progress-track"><div class="progress-fill" style="width:85%;"></div></div>
+          </div>
+
+          <!-- Chat-style result -->
+          <div style="display:flex; flex-direction:column; gap:10px;">
+            <div style="display:flex; gap:8px; align-items:flex-start;">
+              <div style="font-size:18px;">🤖</div>
+              <div class="ai-bubble">
+                Based on your symptoms — <strong>fever, headache, and fatigue for 1–2 days</strong> — the most likely conditions are:
+              </div>
+            </div>
+
+            <!-- Conditions list -->
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <div style="display:flex; align-items:center; gap:10px; padding:10px 12px; background:#fff; border-radius:12px; border:1.5px solid #E2EBF0;">
+                <span style="font-size:20px;">🦟</span>
+                <div style="flex:1;">
+                  <div style="font-size:13px; font-weight:800; color:var(--ink);">Malaria</div>
+                  <div class="progress-track" style="margin-top:4px;"><div class="progress-fill" style="width:68%;"></div></div>
+                </div>
+                <span class="badge badge-high">68%</span>
+              </div>
+              <div style="display:flex; align-items:center; gap:10px; padding:10px 12px; background:#fff; border-radius:12px; border:1.5px solid #E2EBF0;">
+                <span style="font-size:20px;">🤧</span>
+                <div style="flex:1;">
+                  <div style="font-size:13px; font-weight:800; color:var(--ink);">Flu / Influenza</div>
+                  <div class="progress-track" style="margin-top:4px;"><div class="progress-fill" style="width:22%;"></div></div>
+                </div>
+                <span class="badge badge-mid">22%</span>
+              </div>
+              <div style="display:flex; align-items:center; gap:10px; padding:10px 12px; background:#fff; border-radius:12px; border:1.5px solid #E2EBF0;">
+                <span style="font-size:20px;">🦠</span>
+                <div style="flex:1;">
+                  <div style="font-size:13px; font-weight:800; color:var(--ink);">Typhoid</div>
+                  <div class="progress-track" style="margin-top:4px;"><div class="progress-fill" style="width:10%; background:var(--slate);"></div></div>
+                </div>
+                <span class="badge" style="background:var(--mist); color:var(--slate);">10%</span>
+              </div>
+            </div>
+
+            <div style="display:flex; gap:8px; align-items:flex-start;">
+              <div style="font-size:18px;">🤖</div>
+              <div class="ai-bubble">
+                ⚠️ Malaria is most likely given your region and symptom pattern. <strong>You should see a doctor today</strong> for a rapid diagnostic test.
+              </div>
+            </div>
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+            <button class="btn btn-secondary" style="font-size:12px;">See Health Advice</button>
+            <button class="btn btn-primary" style="font-size:12px;">Find Clinic →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="annotation">🔗 "See Health Advice" → S6<br>"Find Clinic" → S8<br>If high-risk → auto-prompt S9</div>
+  </div>
+
+  <!-- ═══ S6: HEALTH ADVICE ═══ -->
+  <div id="s6">
+    <div class="section-header"><h3>Screen 6</h3><span>Health Advice</span></div>
+    <div class="phone">
+      <div class="phone-inner">
+        <div class="status-bar">
+          <span>9:50</span>
+          <div class="status-icons"><span>●●●</span><span>🔋</span></div>
+        </div>
+        <div class="page-header">
+          <button class="back-btn">←</button>
+          <div class="page-title">Health Advice</div>
+        </div>
+        <div class="screen p-screen" style="padding-top:4px;">
+
+          <!-- Urgency banner -->
+          <div style="background:var(--red-lt); border-radius:12px; padding:12px 14px; border-left:4px solid var(--red); display:flex; gap:10px; align-items:center;">
+            <span style="font-size:22px;">🚨</span>
+            <div>
+              <div style="font-size:13px; font-weight:900; color:#991B1B;">Visit a Doctor Today</div>
+              <div style="font-size:11px; color:#B91C1C;">Possible Malaria — requires medical test</div>
+            </div>
+          </div>
+
+          <!-- What to do now -->
+          <div class="section-title">What To Do Right Now</div>
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            <div style="display:flex; gap:10px; align-items:flex-start; padding:10px 12px; background:#F0FDF4; border-radius:12px;">
+              <span style="font-size:18px; flex-shrink:0;">1️⃣</span>
+              <div style="font-size:12px; color:var(--ink); font-weight:600;">Drink plenty of clean water or oral rehydration salts (ORS). Stay hydrated.</div>
+            </div>
+            <div style="display:flex; gap:10px; align-items:flex-start; padding:10px 12px; background:#F0FDF4; border-radius:12px;">
+              <span style="font-size:18px; flex-shrink:0;">2️⃣</span>
+              <div style="font-size:12px; color:var(--ink); font-weight:600;">Take paracetamol (500mg) for fever — every 6 hours, not more than 4 times/day.</div>
+            </div>
+            <div style="display:flex; gap:10px; align-items:flex-start; padding:10px 12px; background:#F0FDF4; border-radius:12px;">
+              <span style="font-size:18px; flex-shrink:0;">3️⃣</span>
+              <div style="font-size:12px; color:var(--ink); font-weight:600;">Rest in a cool, shaded area. Use a mosquito net.</div>
+            </div>
+            <div style="display:flex; gap:10px; align-items:flex-start; padding:10px 12px; background:var(--red-lt); border-radius:12px;">
+              <span style="font-size:18px; flex-shrink:0;">4️⃣</span>
+              <div style="font-size:12px; color:#991B1B; font-weight:700;">Do NOT take antimalarial drugs without a confirmed test — visit a clinic first.</div>
+            </div>
+          </div>
+
+          <!-- Warning signs -->
+          <div class="section-title">Go to Emergency If You Have</div>
+          <div style="background:var(--red-lt); border-radius:12px; padding:12px 14px; display:flex; flex-direction:column; gap:6px;">
+            <div style="font-size:12px; color:#991B1B; font-weight:700;">❌ Convulsions or seizures</div>
+            <div style="font-size:12px; color:#991B1B; font-weight:700;">❌ Cannot stay awake / unconscious</div>
+            <div style="font-size:12px; color:#991B1B; font-weight:700;">❌ Fever above 40°C (104°F)</div>
+            <div style="font-size:12px; color:#991B1B; font-weight:700;">❌ Difficulty breathing</div>
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+            <button class="btn btn-ghost" style="font-size:12px; padding:10px;">📋 Save Advice</button>
+            <button class="btn btn-danger pulse-btn" style="font-size:12px; padding:10px;">🚨 Emergency</button>
+          </div>
+
+          <div style="text-align:center; font-size:10px; color:var(--slate); font-style:italic;">
+            ⚠️ This is not a substitute for professional medical advice.
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="annotation">🔗 "Find Clinic" → S8<br>"Emergency" → S9<br>"Save Advice" → stores in S10</div>
+  </div>
+
+  <!-- ═══ S7: HEALTH TRACKING ═══ -->
+  <div id="s7">
+    <div class="section-header"><h3>Screen 7</h3><span>Health Tracking Dashboard</span></div>
+    <div class="phone">
+      <div class="phone-inner">
+        <div class="status-bar">
+          <span>10:02</span>
+          <div class="status-icons"><span>●●●</span><span>🔋</span></div>
+        </div>
+        <div style="padding:12px 14px 4px;">
+          <div style="font-size:18px; font-weight:900; color:var(--ink);">Health Tracker 📊</div>
+          <div style="font-size:11px; color:var(--slate); font-weight:600;">Last updated: Today, 9:00 AM</div>
+        </div>
+        <div class="screen p-screen" style="padding-top:8px;">
+
+          <!-- Vitals grid -->
+          <div class="section-title">Today's Vitals</div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+            <div class="vital-card">
+              <div class="vital-lbl">Blood Sugar</div>
+              <div class="vital-val">7.2 <span style="font-size:11px; font-weight:600;">mmol/L</span></div>
+              <div style="font-size:10px; color:var(--amber); font-weight:700; margin-top:4px;">↑ Slightly high</div>
+            </div>
+            <div class="vital-card">
+              <div class="vital-lbl">Temperature</div>
+              <div class="vital-val">37.2 <span style="font-size:11px; font-weight:600;">°C</span></div>
+              <div style="font-size:10px; color:#059669; font-weight:700; margin-top:4px;">✓ Normal</div>
+            </div>
+            <div class="vital-card">
+              <div class="vital-lbl">Blood Pressure</div>
+              <div class="vital-val" style="font-size:16px;">128/82</div>
+              <div style="font-size:10px; color:var(--amber); font-weight:700; margin-top:4px;">↑ Pre-high</div>
+            </div>
+            <div class="vital-card">
+              <div class="vital-lbl">Heart Rate</div>
+              <div class="vital-val">76 <span style="font-size:11px; font-weight:600;">bpm</span></div>
+              <div style="font-size:10px; color:#059669; font-weight:700; margin-top:4px;">✓ Normal</div>
+            </div>
+          </div>
+
+          <!-- Mini chart -->
+          <div class="section-title" style="margin-top:4px;">Blood Sugar — This Week</div>
+          <div style="background:#fff; border-radius:14px; padding:14px;">
+            <div class="mini-bar">
+              <div class="bar" style="height:40%;"></div>
+              <div class="bar" style="height:60%;"></div>
+              <div class="bar" style="height:50%;"></div>
+              <div class="bar" style="height:75%;"></div>
+              <div class="bar" style="height:55%;"></div>
+              <div class="bar" style="height:65%;"></div>
+              <div class="bar today" style="height:85%;"></div>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-size:10px; color:var(--slate); font-weight:700; margin-top:6px;">
+              <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span style="color:var(--teal);">Today</span>
+            </div>
+          </div>
+
+          <!-- Log button -->
+          <button class="btn btn-primary">+ Log New Measurement</button>
+
+          <!-- Conditions -->
+          <div class="section-title">Tracked Conditions</div>
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 12px; background:#fff; border-radius:12px;">
+              <div style="display:flex; gap:8px; align-items:center;">
+                <span style="font-size:18px;">💉</span>
+                <div>
+                  <div style="font-size:12px; font-weight:800; color:var(--ink);">Diabetes (Type 2)</div>
+                  <div style="font-size:10px; color:var(--slate);">Under management</div>
+                </div>
+              </div>
+              <span class="badge badge-mid">Monitor</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 12px; background:#fff; border-radius:12px;">
+              <div style="display:flex; gap:8px; align-items:center;">
+                <span style="font-size:18px;">❤️</span>
+                <div>
+                  <div style="font-size:12px; font-weight:800; color:var(--ink);">Hypertension</div>
+                  <div style="font-size:10px; color:var(--slate);">Pre-stage</div>
+                </div>
+              </div>
+              <span class="badge badge-low">Stable</span>
+            </div>
+          </div>
+        </div>
+        <div class="bottom-nav">
+          <div class="nav-item"><div class="nav-icon">🏠</div>Home</div>
+          <div class="nav-item"><div class="nav-icon">🔍</div>Symptoms</div>
+          <div class="nav-item active"><div class="nav-icon">📊</div>Track</div>
+          <div class="nav-item"><div class="nav-icon">📍</div>Clinics</div>
+          <div class="nav-item"><div class="nav-icon">👤</div>Profile</div>
+        </div>
+      </div>
+    </div>
+    <div class="annotation">🔗 "Log New Measurement" → input modal<br>Chart tap → detail view</div>
+  </div>
+
+  <!-- ═══ S8: CLINIC FINDER ═══ -->
+  <div id="s8">
+    <div class="section-header"><h3>Screen 8</h3><span>Nearby Clinics Finder</span></div>
+    <div class="phone">
+      <div class="phone-inner">
+        <div class="status-bar">
+          <span>10:05</span>
+          <div class="status-icons"><span>●●●</span><span>🔋</span></div>
+        </div>
+        <div style="padding:12px 14px 4px;">
+          <div style="font-size:18px; font-weight:900; color:var(--ink);">Find a Clinic 📍</div>
+        </div>
+        <div class="screen p-screen" style="padding-top:6px;">
+
+          <!-- Search -->
+          <div style="display:flex; gap:8px; align-items:center;">
+            <input class="input-field" placeholder="🔍  Search clinics or area..." style="flex:1;"/>
+          </div>
+
+          <!-- Filter chips -->
+          <div style="display:flex; gap:7px; overflow-x:auto; padding-bottom:4px;">
+            <span class="chip chip-filled" style="white-space:nowrap;">All</span>
+            <span class="chip chip-outline" style="white-space:nowrap;">Open Now</span>
+            <span class="chip chip-outline" style="white-space:nowrap;">Free Care</span>
+            <span class="chip chip-outline" style="white-space:nowrap;">Lab Test</span>
+            <span class="chip chip-outline" style="white-space:nowrap;">24-Hour</span>
+          </div>
+
+          <!-- Map -->
+          <div class="map-box">
+            🗺️
+            <div class="map-pin" style="top:35%; left:45%;">📍</div>
+            <div class="map-pin" style="top:50%; left:60%;">🏥</div>
+            <div class="map-pin" style="top:65%; left:35%;">🏥</div>
+            <div class="map-pin" style="top:25%; left:70%;">🏥</div>
+            <div style="position:absolute; bottom:8px; right:10px; background:rgba(255,255,255,.85); border-radius:8px; padding:4px 8px; font-size:10px; font-weight:700; color:var(--ink);">3 clinics nearby</div>
+          </div>
+
+          <!-- Clinic list -->
+          <div class="section-title">Clinics Near You</div>
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            <div class="clinic-card">
+              <div style="font-size:28px;">🏥</div>
+              <div style="flex:1;">
+                <div style="font-size:13px; font-weight:800; color:var(--ink);">Kibera Community Clinic</div>
+                <div style="font-size:11px; color:var(--slate);">0.4 km · Open · Free basic care</div>
+                <div style="font-size:10px; color:#059669; font-weight:700; margin-top:2px;">● Open until 6 PM</div>
+              </div>
+              <button class="btn btn-primary" style="width:auto; padding:8px 12px; font-size:11px;">Go →</button>
+            </div>
+            <div class="clinic-card">
+              <div style="font-size:28px;">🏨</div>
+              <div style="flex:1;">
+                <div style="font-size:13px; font-weight:800; color:var(--ink);">Mama Lucy Hospital</div>
+                <div style="font-size:11px; color:var(--slate);">1.2 km · Lab tests · 24-hr ER</div>
+                <div style="font-size:10px; color:#059669; font-weight:700; margin-top:2px;">● Open 24 hours</div>
+              </div>
+              <button class="btn btn-primary" style="width:auto; padding:8px 12px; font-size:11px;">Go →</button>
+            </div>
+            <div class="clinic-card" style="opacity:.7;">
+              <div style="font-size:28px;">🏥</div>
+              <div style="flex:1;">
+                <div style="font-size:13px; font-weight:800; color:var(--ink);">Nairobi South Health Centre</div>
+                <div style="font-size:11px; color:var(--slate);">2.1 km · NHIF accepted</div>
+                <div style="font-size:10px; color:var(--red); font-weight:700; margin-top:2px;">● Closed · Opens 8 AM</div>
+              </div>
+              <button class="btn btn-ghost" style="width:auto; padding:8px 12px; font-size:11px;">Info</button>
+            </div>
+          </div>
+        </div>
+        <div class="bottom-nav">
+          <div class="nav-item"><div class="nav-icon">🏠</div>Home</div>
+          <div class="nav-item"><div class="nav-icon">🔍</div>Symptoms</div>
+          <div class="nav-item"><div class="nav-icon">📊</div>Track</div>
+          <div class="nav-item active"><div class="nav-icon">📍</div>Clinics</div>
+          <div class="nav-item"><div class="nav-icon">👤</div>Profile</div>
+        </div>
+      </div>
+    </div>
+    <div class="annotation">🔗 "Go →" → opens maps app with directions<br>Filter chips refine list in real-time</div>
+  </div>
+
+  <!-- ═══ S9: EMERGENCY ═══ -->
+  <div id="s9">
+    <div class="section-header"><h3>Screen 9</h3><span>Emergency Warning</span></div>
+    <div class="phone">
+      <div class="phone-inner" style="background:#FEF2F2;">
+        <div class="status-bar" style="background:#FEF2F2;">
+          <span>10:10</span>
+          <div class="status-icons"><span>●●●</span><span>🔋</span></div>
+        </div>
+        <div class="emergency-bg">
+          <div class="sos-ring">🆘</div>
+
+          <div style="text-align:center;">
+            <div style="font-size:22px; font-weight:900; color:#991B1B;">Emergency Warning</div>
+            <div style="font-size:13px; color:#B91C1C; margin-top:4px; font-weight:600;">Your symptoms indicate a possible medical emergency</div>
+          </div>
+
+          <!-- Warning symptoms -->
+          <div style="background:#fff; border-radius:16px; padding:14px; width:100%; border:2px solid #FECACA;">
+            <div style="font-size:12px; font-weight:900; color:#991B1B; margin-bottom:8px;">⚠️ Critical Symptoms Detected:</div>
+            <div style="display:flex; flex-direction:column; gap:6px;">
+              <div style="font-size:12px; color:var(--ink); font-weight:700;">🔴 High fever: 40°C+ </div>
+              <div style="font-size:12px; color:var(--ink); font-weight:700;">🔴 Difficulty breathing</div>
+              <div style="font-size:12px; color:var(--ink); font-weight:700;">🔴 Severe chest pain</div>
+            </div>
+          </div>
+
+          <!-- Action buttons -->
+          <div style="width:100%; display:flex; flex-direction:column; gap:10px;">
+            <button class="btn btn-danger pulse-btn" style="font-size:15px; padding:16px;">📞 Call Emergency: 0800 723 253</button>
+            <button class="btn btn-secondary" style="font-size:13px;">📍 Find Nearest ER Now</button>
+            <button class="btn btn-ghost" style="font-size:12px; padding:10px; border-color:#EF4444; color:#EF4444;">Share My Location with Family</button>
+          </div>
+
+          <!-- Calm instruction -->
+          <div style="background:#FFF7ED; border-radius:12px; padding:12px 14px; border-left:4px solid var(--amber); width:100%;">
+            <div style="font-size:12px; color:#92400E; font-weight:700;">While you wait for help:</div>
+            <div style="font-size:11px; color:#92400E; margin-top:4px; line-height:1.5;">Stay calm. Sit or lie down. Do not eat or drink. Keep someone with you.</div>
+          </div>
+
+          <button style="background:transparent; border:none; font-size:12px; color:#B91C1C; font-weight:700; cursor:pointer; text-decoration:underline;">I'm okay — go back</button>
+        </div>
+      </div>
+    </div>
+    <div class="annotation">🔗 "Call Emergency" → tel: link<br>"Find Nearest ER" → S8 filtered to ER only<br>"I'm okay" → S6 (Health Advice)</div>
+  </div>
+
+  <!-- ═══ S10: PROFILE & HISTORY ═══ -->
+  <div id="s10">
+    <div class="section-header"><h3>Screen 10</h3><span>Profile & Health History</span></div>
+    <div class="phone">
+      <div class="phone-inner">
+        <div class="status-bar">
+          <span>10:15</span>
+          <div class="status-icons"><span>●●●</span><span>🔋</span></div>
+        </div>
+        <div class="screen p-screen" style="padding-top:10px;">
+
+          <!-- Profile header -->
+          <div style="display:flex; align-items:center; gap:14px;">
+            <div class="avatar" style="width:58px; height:58px; font-size:28px; border:3px solid var(--teal);">🧑🏿</div>
+            <div style="flex:1;">
+              <div style="font-size:17px; font-weight:900; color:var(--ink);">Amina Wanjiku</div>
+              <div style="font-size:12px; color:var(--slate);">Age 34 · Female · Nairobi, KE</div>
+              <div style="display:flex; gap:6px; margin-top:5px;">
+                <span class="badge badge-mid">Diabetes</span>
+                <span class="badge" style="background:#DBEAFE; color:#1E40AF;">Hypertension</span>
+              </div>
+            </div>
+            <button class="btn btn-secondary" style="width:auto; padding:8px 12px; font-size:11px;">Edit</button>
+          </div>
+
+          <hr/>
+
+          <!-- Health summary -->
+          <div class="section-title">Health Summary</div>
+          <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px; text-align:center;">
+            <div style="background:var(--mint); border-radius:12px; padding:10px;">
+              <div style="font-size:18px; font-weight:900; color:var(--teal);">12</div>
+              <div style="font-size:10px; color:var(--slate); font-weight:700;">Checks</div>
+            </div>
+            <div style="background:var(--mint); border-radius:12px; padding:10px;">
+              <div style="font-size:18px; font-weight:900; color:var(--teal);">3</div>
+              <div style="font-size:10px; color:var(--slate); font-weight:700;">Clinic Visits</div>
+            </div>
+            <div style="background:var(--mint); border-radius:12px; padding:10px;">
+              <div style="font-size:18px; font-weight:900; color:var(--teal);">30</div>
+              <div style="font-size:10px; color:var(--slate); font-weight:700;">Days tracked</div>
+            </div>
+          </div>
+
+          <!-- History list -->
+          <div class="section-title">Recent Health History</div>
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            <div style="padding:10px 12px; background:var(--mist); border-radius:12px;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div style="font-size:12px; font-weight:800; color:var(--ink);">🤒 Malaria Scare</div>
+                <span class="badge badge-high">High</span>
+              </div>
+              <div style="font-size:11px; color:var(--slate); margin-top:4px;">Today · Fever, Headache, Fatigue</div>
+              <div style="font-size:11px; color:var(--teal); font-weight:700; margin-top:4px; cursor:pointer;">View advice →</div>
+            </div>
+            <div style="padding:10px 12px; background:var(--mist); border-radius:12px;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div style="font-size:12px; font-weight:800; color:var(--ink);">😮‍💨 Mild Cough</div>
+                <span class="badge badge-low">Low</span>
+              </div>
+              <div style="font-size:11px; color:var(--slate); margin-top:4px;">3 days ago · Resolved</div>
+            </div>
+            <div style="padding:10px 12px; background:var(--mist); border-radius:12px;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div style="font-size:12px; font-weight:800; color:var(--ink);">💉 Blood Sugar High</div>
+                <span class="badge badge-mid">Medium</span>
+              </div>
+              <div style="font-size:11px; color:var(--slate); margin-top:4px;">1 week ago · Ongoing monitoring</div>
+            </div>
+          </div>
+
+          <!-- Settings -->
+          <div class="section-title">Settings</div>
+          <div style="display:flex; flex-direction:column; gap:6px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 12px; background:#fff; border-radius:12px; cursor:pointer;">
+              <span style="font-size:12px; font-weight:700; color:var(--ink);">🌐 Language: English</span>
+              <span style="color:var(--slate);">›</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 12px; background:#fff; border-radius:12px; cursor:pointer;">
+              <span style="font-size:12px; font-weight:700; color:var(--ink);">🔔 Medication Reminders: On</span>
+              <span style="color:var(--slate);">›</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 12px; background:#fff; border-radius:12px; cursor:pointer;">
+              <span style="font-size:12px; font-weight:700; color:var(--ink);">📵 Offline Mode: Enabled</span>
+              <span style="color:var(--teal);">›</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 12px; background:#fff; border-radius:12px; cursor:pointer;">
+              <span style="font-size:12px; font-weight:700; color:var(--red);">🚪 Log Out</span>
+              <span style="color:var(--slate);">›</span>
+            </div>
+          </div>
+
+        </div>
+        <div class="bottom-nav">
+          <div class="nav-item"><div class="nav-icon">🏠</div>Home</div>
+          <div class="nav-item"><div class="nav-icon">🔍</div>Symptoms</div>
+          <div class="nav-item"><div class="nav-icon">📊</div>Track</div>
+          <div class="nav-item"><div class="nav-icon">📍</div>Clinics</div>
+          <div class="nav-item active"><div class="nav-icon">👤</div>Profile</div>
+        </div>
+      </div>
+    </div>
+    <div class="annotation">🔗 History item → S6 (Advice detail)<br>Settings items → modal sheets</div>
+  </div>
+
+</div><!-- /device-grid -->
+
+<!-- ══ DESIGN NOTES ══ -->
+<div class="flow-wrap" style="margin-top:40px; max-width:960px;">
+  <h2>📐 Design System Notes</h2>
+  <p>Key decisions for low-resource, low-literacy environments</p>
+  <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:14px; margin-top:4px;">
+    <div style="background:var(--mint); border-radius:12px; padding:14px;">
+      <div style="font-size:18px; margin-bottom:6px;">🎨</div>
+      <div style="font-size:12px; font-weight:800; color:var(--ink);">Teal Primary</div>
+      <div style="font-size:11px; color:var(--slate); margin-top:4px;">Culturally neutral, medical-adjacent, high contrast on white backgrounds</div>
+    </div>
+    <div style="background:var(--mint); border-radius:12px; padding:14px;">
+      <div style="font-size:18px; margin-bottom:6px;">🔤</div>
+      <div style="font-size:12px; font-weight:800; color:var(--ink);">Nunito + Emoji-first</div>
+      <div style="font-size:11px; color:var(--slate); margin-top:4px;">Rounded letterforms aid low-literacy users. Emoji universally understood across languages</div>
+    </div>
+    <div style="background:var(--mint); border-radius:12px; padding:14px;">
+      <div style="font-size:18px; margin-bottom:6px;">📶</div>
+      <div style="font-size:12px; font-weight:800; color:var(--ink);">Offline-First</div>
+      <div style="font-size:11px; color:var(--slate); margin-top:4px;">Core symptom checking cached locally. No image-heavy assets. Works on 2G</div>
+    </div>
+    <div style="background:var(--mint); border-radius:12px; padding:14px;">
+      <div style="font-size:18px; margin-bottom:6px;">♿</div>
+      <div style="font-size:12px; font-weight:800; color:var(--ink);">Accessibility</div>
+      <div style="font-size:11px; color:var(--slate); margin-top:4px;">Min 44px touch targets. 4.5:1 contrast ratio. Screen reader labels on all icons</div>
+    </div>
+    <div style="background:var(--mint); border-radius:12px; padding:14px;">
+      <div style="font-size:18px; margin-bottom:6px;">🌍</div>
+      <div style="font-size:12px; font-weight:800; color:var(--ink);">Multilingual</div>
+      <div style="font-size:11px; color:var(--slate); margin-top:4px;">English, Swahili, French. RTL-ready layout grid. Voice input option planned</div>
+    </div>
+    <div style="background:var(--mint); border-radius:12px; padding:14px;">
+      <div style="font-size:18px; margin-bottom:6px;">🚨</div>
+      <div style="font-size:12px; font-weight:800; color:var(--ink);">Clear Escalation</div>
+      <div style="font-size:11px; color:var(--slate); margin-top:4px;">Red warnings are impossible to miss. Emergency CTA always visible. Never buried in menus</div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function scrollTo(id) {
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+</script>
+
+</body>
+</html>
